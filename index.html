@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<body>
+  <div id="bar_chart">
+  </div>
+  <div id="json"></div>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script>
+    //************* generate data ************
+    var data = [];
+    var space = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    var spaceLength = space.length;
+    makedata();
+
+    function makedata() {
+      var obj = {};
+
+      for (var i = 0; i < spaceLength; i++) {
+        obj = {};
+        value = Math.floor(Math.random() * 500);
+        rand = Math.floor(Math.random() * space.length)
+        name = space.charAt(rand);
+        obj["name"] = name;
+        obj["val"] = value;
+        data.push(obj);
+        space = space.slice(0, rand) + space.slice(rand + 1, space.length)
+      }
+    }
+
+    // To display json in html page
+    document.getElementById("json").innerHTML = "<pre>" + JSON.stringify(data, null, 4) + "</pre>";
+
+    var margin = {
+        top: 50,
+        right: 50,
+        bottom: 100,
+        left: 80
+      },
+      width = 3000 - margin.left - margin.right,
+      height = 600 - margin.top - margin.bottom;
+
+    var x = d3.scaleBand()
+      .domain(data.map(function(d) {
+        return d.name
+      }))
+      .range([0, width / 4]);
+
+    var y1 = d3.scaleLinear()
+      .domain([0, d3.max(data, function(d) {
+        return d.val
+      })])
+      .range([height, 0]);
+
+    var svg = d3.select("#bar_chart")
+      .data(data)
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var g0 = svg.append("g")
+      .attr("class", "focus")
+      .attr("transform", "translate(0,0)");
+
+    var xAxis = d3.axisBottom(x)
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+    // Add the Y Axis
+    svg.append("g")
+      .attr("class", "axis")
+      .call(d3.axisLeft(y1)
+        .ticks(7));
+
+    var tooltip = d3.select("#info")
+      .append("div")
+      .style("position", "absolute")
+      .style("z-index", "10")
+      .style("visibility", "hidden");
+
+    var rects = g0.selectAll('rect')
+      .data(data);
+
+    //********* Bar Chart 1 ****************
+    var newRects1 = rects.enter();
+
+    newRects1.append('rect')
+      .attr('x', function(d, i) {
+        return x(d.name);
+      })
+      .attr('y', function(d, i) {
+        return y1(d.val);
+      })
+      .attr('height', function(d, i) {
+        return height - y1(d.val)
+      })
+      .attr('opacity', 0.85)
+      .attr('width', 10)
+      .attr("transform", "translate(" + 2 + ",0)")
+      .style('fill', 'lightblue')
+      .style('stroke', 'gray')
+      .attr('class', 'bar');
+  </script>
